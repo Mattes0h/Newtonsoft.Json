@@ -212,11 +212,9 @@ namespace Newtonsoft.Json.Tests
 
         public static string ResolvePath(string path)
         {
-#if !DNXCORE50
-            return Path.Combine(TestContext.CurrentContext.TestDirectory, path);
-#else
-            return path;
-#endif
+            var assemblyPath = Path.GetDirectoryName(typeof(TestFixtureBase).Assembly().Location);
+
+            return Path.Combine(assemblyPath, path);
         }
 
         protected string GetOffset(DateTime d, DateFormatHandling dateFormatHandling)
@@ -291,6 +289,9 @@ namespace Newtonsoft.Json.Tests
 
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+#else
+            // suppress writing to console with dotnet test to keep build log size small
+            Console.SetOut(new StringWriter());
 #endif
 
             JsonConvert.DefaultSettings = null;
@@ -372,7 +373,7 @@ namespace Newtonsoft.Json.Tests
             {
                 action();
 
-                Assert.Fail("Exception of type {0} expected. No exception thrown.", typeof(TException).Name);
+                Assert.Fail("Exception of type " + typeof(TException).Name + " expected. No exception thrown.");
                 return null;
             }
             catch (TException ex)
@@ -405,7 +406,7 @@ namespace Newtonsoft.Json.Tests
             {
                 await action();
 
-                Assert.Fail("Exception of type {0} expected. No exception thrown.", typeof(TException).Name);
+                Assert.Fail("Exception of type " + typeof(TException).Name + " expected. No exception thrown.");
                 return null;
             }
             catch (TException ex)

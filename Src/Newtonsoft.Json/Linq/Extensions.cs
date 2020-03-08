@@ -27,6 +27,8 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Utilities;
 using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 #if !HAVE_LINQ
 using Newtonsoft.Json.Utilities.LinqBridge;
 #else
@@ -111,7 +113,7 @@ namespace Newtonsoft.Json.Linq
         /// <param name="source">An <see cref="IEnumerable{T}"/> of <see cref="JToken"/> that contains the source collection.</param>
         /// <param name="key">The token key.</param>
         /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="JToken"/> that contains the values of every token in the source collection with the given key.</returns>
-        public static IJEnumerable<JToken> Values(this IEnumerable<JToken> source, object key)
+        public static IJEnumerable<JToken> Values(this IEnumerable<JToken> source, object? key)
         {
             return Values<JToken, JToken>(source, key).AsJEnumerable();
         }
@@ -171,8 +173,7 @@ namespace Newtonsoft.Json.Linq
         {
             ValidationUtils.ArgumentNotNull(value, nameof(value));
 
-            JToken token = value as JToken;
-            if (token == null)
+            if (!(value is JToken token))
             {
                 throw new ArgumentException("Source value must be a JToken.");
             }
@@ -180,7 +181,7 @@ namespace Newtonsoft.Json.Linq
             return token.Convert<JToken, U>();
         }
 
-        internal static IEnumerable<U> Values<T, U>(this IEnumerable<T> source, object key) where T : JToken
+        internal static IEnumerable<U> Values<T, U>(this IEnumerable<T> source, object? key) where T : JToken
         {
             ValidationUtils.ArgumentNotNull(source, nameof(source));
 
@@ -188,8 +189,7 @@ namespace Newtonsoft.Json.Linq
             {
                 foreach (T token in source)
                 {
-                    JValue value = token as JValue;
-                    if (value != null)
+                    if (token is JValue value)
                     {
                         yield return Convert<JValue, U>(value);
                     }
@@ -206,7 +206,7 @@ namespace Newtonsoft.Json.Linq
             {
                 foreach (T token in source)
                 {
-                    JToken value = token[key];
+                    JToken? value = token[key];
                     if (value != null)
                     {
                         yield return value.Convert<JToken, U>();
@@ -253,31 +253,32 @@ namespace Newtonsoft.Json.Linq
             }
         }
 
-        internal static U Convert<T, U>(this T token) where T : JToken
+        [return: MaybeNull]
+        internal static U Convert<T, U>(this T token) where T : JToken?
         {
             if (token == null)
             {
-                return default(U);
+#pragma warning disable CS8653 // A default expression introduces a null value for a type parameter.
+                return default;
+#pragma warning restore CS8653 // A default expression introduces a null value for a type parameter.
             }
 
-            if (token is U
+            if (token is U castValue
                 // don't want to cast JValue to its interfaces, want to get the internal value
                 && typeof(U) != typeof(IComparable) && typeof(U) != typeof(IFormattable))
             {
-                // HACK
-                return (U)(object)token;
+                return castValue;
             }
             else
             {
-                JValue value = token as JValue;
-                if (value == null)
+                if (!(token is JValue value))
                 {
                     throw new InvalidCastException("Cannot cast {0} to {1}.".FormatWith(CultureInfo.InvariantCulture, token.GetType(), typeof(T)));
                 }
 
-                if (value.Value is U)
+                if (value.Value is U u)
                 {
-                    return (U)value.Value;
+                    return u;
                 }
 
                 Type targetType = typeof(U);
@@ -286,7 +287,9 @@ namespace Newtonsoft.Json.Linq
                 {
                     if (value.Value == null)
                     {
-                        return default(U);
+#pragma warning disable CS8653 // A default expression introduces a null value for a type parameter.
+                        return default;
+#pragma warning restore CS8653 // A default expression introduces a null value for a type parameter.
                     }
 
                     targetType = Nullable.GetUnderlyingType(targetType);
@@ -319,11 +322,11 @@ namespace Newtonsoft.Json.Linq
         {
             if (source == null)
             {
-                return null;
+                return null!;
             }
-            else if (source is IJEnumerable<T>)
+            else if (source is IJEnumerable<T> customEnumerable)
             {
-                return (IJEnumerable<T>)source;
+                return customEnumerable;
             }
             else
             {

@@ -28,7 +28,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
-#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3
+#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3 || NETSTANDARD2_0
 using System.Numerics;
 #endif
 using System.Text;
@@ -363,7 +363,8 @@ namespace Newtonsoft.Json.Tests.JsonTextReaderTests
                 new string[]
                 {
                     "Value cannot be null." + Environment.NewLine + "Parameter name: reader",
-                    "Argument cannot be null." + Environment.NewLine + "Parameter name: reader" // Mono
+                    "Argument cannot be null." + Environment.NewLine + "Parameter name: reader", // Mono
+                    "Value cannot be null. (Parameter 'reader')"
                 });
         }
 
@@ -424,7 +425,7 @@ namespace Newtonsoft.Json.Tests.JsonTextReaderTests
 
             JsonTextReader reader = new JsonTextReader(new StringReader(json));
 #if DEBUG
-            reader.SetCharBuffer(new char[2]);
+            reader.CharBuffer = new char[2];
 #endif
 
             reader.Read();
@@ -616,7 +617,7 @@ namespace Newtonsoft.Json.Tests.JsonTextReaderTests
             }
         }
 
-#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3
+#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void ReadInt64Overflow()
         {
@@ -638,7 +639,7 @@ namespace Newtonsoft.Json.Tests.JsonTextReaderTests
         }
 #endif
 
-#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3
+#if !(NET20 || NET35 || PORTABLE40 || PORTABLE) || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void ReadInt64Overflow_Negative()
         {

@@ -33,6 +33,7 @@ using System.Text;
 using System.IO;
 using System.Xml;
 using Newtonsoft.Json.Utilities;
+using System.Diagnostics;
 
 namespace Newtonsoft.Json
 {
@@ -43,15 +44,15 @@ namespace Newtonsoft.Json
     {
         private const int IndentCharBufferSize = 12;
         private readonly TextWriter _writer;
-        private Base64Encoder _base64Encoder;
+        private Base64Encoder? _base64Encoder;
         private char _indentChar;
         private int _indentation;
         private char _quoteChar;
         private bool _quoteName;
-        private bool[] _charEscapeFlags;
-        private char[] _writeBuffer;
-        private IArrayPool<char> _arrayPool;
-        private char[] _indentChars;
+        private bool[]? _charEscapeFlags;
+        private char[]? _writeBuffer;
+        private IArrayPool<char>? _arrayPool;
+        private char[]? _indentChars;
 
         private Base64Encoder Base64Encoder
         {
@@ -69,9 +70,9 @@ namespace Newtonsoft.Json
         /// <summary>
         /// Gets or sets the writer's character array pool.
         /// </summary>
-        public IArrayPool<char> ArrayPool
+        public IArrayPool<char>? ArrayPool
         {
-            get { return _arrayPool; }
+            get => _arrayPool;
             set
             {
                 if (value == null)
@@ -88,7 +89,7 @@ namespace Newtonsoft.Json
         /// </summary>
         public int Indentation
         {
-            get { return _indentation; }
+            get => _indentation;
             set
             {
                 if (value < 0)
@@ -105,7 +106,7 @@ namespace Newtonsoft.Json
         /// </summary>
         public char QuoteChar
         {
-            get { return _quoteChar; }
+            get => _quoteChar;
             set
             {
                 if (value != '"' && value != '\'')
@@ -123,7 +124,7 @@ namespace Newtonsoft.Json
         /// </summary>
         public char IndentChar
         {
-            get { return _indentChar; }
+            get => _indentChar;
             set
             {
                 if (value != _indentChar)
@@ -139,8 +140,8 @@ namespace Newtonsoft.Json
         /// </summary>
         public bool QuoteName
         {
-            get { return _quoteName; }
-            set { _quoteName = value; }
+            get => _quoteName;
+            set => _quoteName = value;
         }
 
         /// <summary>
@@ -342,7 +343,7 @@ namespace Newtonsoft.Json
             {
                 for (int i = 0; i != newLineLen; ++i)
                 {
-                    if (writerNewLine[i] != _indentChars[i])
+                    if (writerNewLine[i] != _indentChars![i])
                     {
                         match = false;
                         break;
@@ -387,13 +388,13 @@ namespace Newtonsoft.Json
         /// An error will raised if the value cannot be written as a single JSON token.
         /// </summary>
         /// <param name="value">The <see cref="Object"/> value to write.</param>
-        public override void WriteValue(object value)
+        public override void WriteValue(object? value)
         {
 #if HAVE_BIG_INTEGER
-            if (value is BigInteger)
+            if (value is BigInteger i)
             {
                 InternalWriteValue(JsonToken.Integer);
-                WriteValueInternal(((BigInteger)value).ToString(CultureInfo.InvariantCulture), JsonToken.String);
+                WriteValueInternal(i.ToString(CultureInfo.InvariantCulture), JsonToken.String);
             }
             else
 #endif
@@ -424,7 +425,7 @@ namespace Newtonsoft.Json
         /// Writes raw JSON.
         /// </summary>
         /// <param name="json">The raw JSON to write.</param>
-        public override void WriteRaw(string json)
+        public override void WriteRaw(string? json)
         {
             InternalWriteRaw();
 
@@ -435,7 +436,7 @@ namespace Newtonsoft.Json
         /// Writes a <see cref="String"/> value.
         /// </summary>
         /// <param name="value">The <see cref="String"/> value to write.</param>
-        public override void WriteValue(string value)
+        public override void WriteValue(string? value)
         {
             InternalWriteValue(JsonToken.String);
 
@@ -452,7 +453,7 @@ namespace Newtonsoft.Json
         private void WriteEscapedString(string value, bool quote)
         {
             EnsureWriteBuffer();
-            JavaScriptUtils.WriteEscapedJavaScriptString(_writer, value, _quoteChar, quote, _charEscapeFlags, StringEscapeHandling, _arrayPool, ref _writeBuffer);
+            JavaScriptUtils.WriteEscapedJavaScriptString(_writer, value, _quoteChar, quote, _charEscapeFlags!, StringEscapeHandling, _arrayPool, ref _writeBuffer);
         }
 
         /// <summary>
@@ -632,7 +633,7 @@ namespace Newtonsoft.Json
             InternalWriteValue(JsonToken.Date);
             value = DateTimeUtils.EnsureDateTime(value, DateTimeZoneHandling);
 
-            if (string.IsNullOrEmpty(DateFormatString))
+            if (StringUtils.IsNullOrEmpty(DateFormatString))
             {
                 int length = WriteValueToBuffer(value);
 
@@ -649,6 +650,7 @@ namespace Newtonsoft.Json
         private int WriteValueToBuffer(DateTime value)
         {
             EnsureWriteBuffer();
+            MiscellaneousUtils.Assert(_writeBuffer != null);
 
             int pos = 0;
             _writeBuffer[pos++] = _quoteChar;
@@ -661,7 +663,7 @@ namespace Newtonsoft.Json
         /// Writes a <see cref="Byte"/>[] value.
         /// </summary>
         /// <param name="value">The <see cref="Byte"/>[] value to write.</param>
-        public override void WriteValue(byte[] value)
+        public override void WriteValue(byte[]? value)
         {
             if (value == null)
             {
@@ -686,7 +688,7 @@ namespace Newtonsoft.Json
         {
             InternalWriteValue(JsonToken.Date);
 
-            if (string.IsNullOrEmpty(DateFormatString))
+            if (StringUtils.IsNullOrEmpty(DateFormatString))
             {
                 int length = WriteValueToBuffer(value);
 
@@ -703,6 +705,7 @@ namespace Newtonsoft.Json
         private int WriteValueToBuffer(DateTimeOffset value)
         {
             EnsureWriteBuffer();
+            MiscellaneousUtils.Assert(_writeBuffer != null);
 
             int pos = 0;
             _writeBuffer[pos++] = _quoteChar;
@@ -720,7 +723,7 @@ namespace Newtonsoft.Json
         {
             InternalWriteValue(JsonToken.String);
 
-            string text = null;
+            string text;
 
 #if HAVE_CHAR_TO_STRING_WITH_CULTURE
             text = value.ToString("D", CultureInfo.InvariantCulture);
@@ -757,7 +760,7 @@ namespace Newtonsoft.Json
         /// Writes a <see cref="Uri"/> value.
         /// </summary>
         /// <param name="value">The <see cref="Uri"/> value to write.</param>
-        public override void WriteValue(Uri value)
+        public override void WriteValue(Uri? value)
         {
             if (value == null)
             {
@@ -775,7 +778,7 @@ namespace Newtonsoft.Json
         /// Writes a comment <c>/*...*/</c> containing the specified text. 
         /// </summary>
         /// <param name="text">Text to place inside the comment.</param>
-        public override void WriteComment(string text)
+        public override void WriteComment(string? text)
         {
             InternalWriteComment();
 
@@ -817,22 +820,29 @@ namespace Newtonsoft.Json
             }
         }
 
-        private void WriteIntegerValue(ulong uvalue, bool negative)
+        private void WriteIntegerValue(ulong value, bool negative)
         {
-            if (!negative & uvalue <= 9)
+            if (!negative & value <= 9)
             {
-                _writer.Write((char)('0' + uvalue));
+                _writer.Write((char)('0' + value));
             }
             else
             {
-                int length = WriteNumberToBuffer(uvalue, negative);
+                int length = WriteNumberToBuffer(value, negative);
                 _writer.Write(_writeBuffer, 0, length);
             }
         }
 
         private int WriteNumberToBuffer(ulong value, bool negative)
         {
+            if (value <= uint.MaxValue)
+            {
+                // avoid the 64 bit division if possible
+                return WriteNumberToBuffer((uint)value, negative);
+            }
+
             EnsureWriteBuffer();
+            MiscellaneousUtils.Assert(_writeBuffer != null);
 
             int totalLength = MathUtils.IntLength(value);
 
@@ -846,8 +856,62 @@ namespace Newtonsoft.Json
 
             do
             {
-                _writeBuffer[--index] = (char)('0' + value % 10);
-                value /= 10;
+                ulong quotient = value / 10;
+                ulong digit = value - (quotient * 10);
+                _writeBuffer[--index] = (char)('0' + digit);
+                value = quotient;
+            } while (value != 0);
+
+            return totalLength;
+        }
+
+        private void WriteIntegerValue(int value)
+        {
+            if (value >= 0 && value <= 9)
+            {
+                _writer.Write((char)('0' + value));
+            }
+            else
+            {
+                bool negative = value < 0;
+                WriteIntegerValue(negative ? (uint)-value : (uint)value, negative);
+            }
+        }
+
+        private void WriteIntegerValue(uint value, bool negative)
+        {
+            if (!negative & value <= 9)
+            {
+                _writer.Write((char)('0' + value));
+            }
+            else
+            {
+                int length = WriteNumberToBuffer(value, negative);
+                _writer.Write(_writeBuffer, 0, length);
+            }
+        }
+
+        private int WriteNumberToBuffer(uint value, bool negative)
+        {
+            EnsureWriteBuffer();
+            MiscellaneousUtils.Assert(_writeBuffer != null);
+
+            int totalLength = MathUtils.IntLength(value);
+
+            if (negative)
+            {
+                totalLength++;
+                _writeBuffer[0] = '-';
+            }
+
+            int index = totalLength;
+
+            do
+            {
+                uint quotient = value / 10;
+                uint digit = value - (quotient * 10);
+                _writeBuffer[--index] = (char)('0' + digit);
+                value = quotient;
             } while (value != 0);
 
             return totalLength;

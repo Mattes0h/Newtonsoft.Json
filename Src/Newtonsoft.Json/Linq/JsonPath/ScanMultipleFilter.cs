@@ -4,36 +4,39 @@ namespace Newtonsoft.Json.Linq.JsonPath
 {
     internal class ScanMultipleFilter : PathFilter
     {
-        public List<string> Names { get; set; }
+        private List<string> _names;
+
+        public ScanMultipleFilter(List<string> names)
+        {
+            _names = names;
+        }
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
             foreach (JToken c in current)
             {
-                JToken value = c;
-                JContainer container = c as JContainer;
+                JToken? value = c;
 
                 while (true)
                 {
+                    JContainer? container = value as JContainer;
+
                     value = GetNextScanValue(c, container, value);
                     if (value == null)
                     {
                         break;
                     }
 
-                    JProperty e = value as JProperty;
-                    if (e != null)
+                    if (value is JProperty property)
                     {
-                        foreach (string name in Names)
+                        foreach (string name in _names)
                         {
-                            if (e.Name == name)
+                            if (property.Name == name)
                             {
-                                yield return e.Value;
+                                yield return property.Value;
                             }
                         }
                     }
-
-                    container = value as JContainer;
                 }
             }
         }

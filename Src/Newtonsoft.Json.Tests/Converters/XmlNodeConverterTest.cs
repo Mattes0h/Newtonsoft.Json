@@ -23,7 +23,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-#if !(DNXCORE50 || PORTABLE40)
+#if !(DNXCORE50 || PORTABLE40) || NETSTANDARD1_3 || NETSTANDARD2_0
 using System.Globalization;
 #if NET20
 using Newtonsoft.Json.Utilities.LinqBridge;
@@ -58,7 +58,7 @@ namespace Newtonsoft.Json.Tests.Converters
     [TestFixture]
     public class XmlNodeConverterTest : TestFixtureBase
     {
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         private string SerializeXmlNode(XmlNode node)
         {
             string json = JsonConvert.SerializeXmlNode(node, Formatting.Indented);
@@ -151,6 +151,155 @@ namespace Newtonsoft.Json.Tests.Converters
             return sw.ToString();
         }
 
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
+        [Test]
+        public void DeserializeXmlNode_DefaultDate()
+        {
+            XmlDocument xmlNode = JsonConvert.DeserializeXmlNode("{Time: \"0001-01-01T00:00:00\"}");
+
+            Assert.AreEqual("<Time>0001-01-01T00:00:00</Time>", xmlNode.OuterXml);
+        }
+
+        [Test]
+        public void XmlNode_Null()
+        {
+            string json = JsonConvert.SerializeXmlNode(null);
+
+            Assert.AreEqual("null", json);
+        }
+
+        [Test]
+        public void XmlNode_Roundtrip_PropertyNameWithColon()
+        {
+            const string initialJson = @"{""Be:fore:After!"":""Value!""}";
+
+            XmlDocument xmlNode = JsonConvert.DeserializeXmlNode(initialJson, null, false, true);
+
+            Assert.AreEqual("<Be_x003A_fore_x003A_After_x0021_>Value!</Be_x003A_fore_x003A_After_x0021_>", xmlNode.OuterXml);
+
+            string json = JsonConvert.SerializeXmlNode(xmlNode);
+
+            Assert.AreEqual(initialJson, json);
+        }
+
+        [Test]
+        public void XmlNode_Roundtrip_PropertyNameWithEscapedValue()
+        {
+            const string initialJson = @"{""BeforeAfter!"":""Value!""}";
+
+            XmlDocument xmlNode = JsonConvert.DeserializeXmlNode(initialJson);
+
+            Assert.AreEqual("<BeforeAfter_x0021_>Value!</BeforeAfter_x0021_>", xmlNode.OuterXml);
+
+            string json = JsonConvert.SerializeXmlNode(xmlNode);
+
+            Assert.AreEqual(initialJson, json);
+        }
+
+        [Test]
+        public void XmlNode_EncodeSpecialCharacters()
+        {
+            string initialJson = @"{
+  ""?xml"": {
+    ""@version"": ""1.0"",
+    ""@standalone"": ""no""
+  },
+  ""?xml-stylesheet"": ""href=\""classic.xsl\"" type=\""text/xml\"""",
+  ""span"": {
+    ""@class"": ""vevent"",
+    ""a"": {
+      ""@class"": ""url"",
+      ""@href"": ""http://www.web2con.com/"",
+      ""span"": [
+        {
+          ""@class"": ""summary"",
+          ""#text"": ""Web 2.0 Conference"",
+          ""#cdata-section"": ""my escaped text""
+        },
+        {
+          ""@class"": ""location"",
+          ""#text"": ""Argent Hotel, San Francisco, CA""
+        }
+      ],
+      ""abbr"": [
+        {
+          ""@class"": ""dtstart"",
+          ""@title"": ""2005-10-05"",
+          ""#text"": ""October 5""
+        },
+        {
+          ""@class"": ""dtend"",
+          ""@title"": ""2005-10-08"",
+          ""#text"": ""7""
+        }
+      ]
+    }
+  }
+}";
+
+            XmlDocument xmlNode = JsonConvert.DeserializeXmlNode(initialJson, "root", false, true);
+
+            StringAssert.AreEqual(@"<root>
+  <_x003F_xml>
+    <_x0040_version>1.0</_x0040_version>
+    <_x0040_standalone>no</_x0040_standalone>
+  </_x003F_xml>
+  <_x003F_xml-stylesheet>href=""classic.xsl"" type=""text/xml""</_x003F_xml-stylesheet>
+  <span>
+    <_x0040_class>vevent</_x0040_class>
+    <a>
+      <_x0040_class>url</_x0040_class>
+      <_x0040_href>http://www.web2con.com/</_x0040_href>
+      <span>
+        <_x0040_class>summary</_x0040_class>
+        <_x0023_text>Web 2.0 Conference</_x0023_text>
+        <_x0023_cdata-section>my escaped text</_x0023_cdata-section>
+      </span>
+      <span>
+        <_x0040_class>location</_x0040_class>
+        <_x0023_text>Argent Hotel, San Francisco, CA</_x0023_text>
+      </span>
+      <abbr>
+        <_x0040_class>dtstart</_x0040_class>
+        <_x0040_title>2005-10-05</_x0040_title>
+        <_x0023_text>October 5</_x0023_text>
+      </abbr>
+      <abbr>
+        <_x0040_class>dtend</_x0040_class>
+        <_x0040_title>2005-10-08</_x0040_title>
+        <_x0023_text>7</_x0023_text>
+      </abbr>
+    </a>
+  </span>
+</root>", IndentXml(xmlNode.OuterXml));
+
+            string json = JsonConvert.SerializeXmlNode(xmlNode, Formatting.Indented, true);
+
+            Assert.AreEqual(initialJson, json);
+        }
+
+        [Test]
+        public void XmlNode_UnescapeTextContent()
+        {
+            XmlDocument xmlNode = new XmlDocument();
+            xmlNode.LoadXml("<root>A &gt; B</root>");
+
+            string json = JsonConvert.SerializeXmlNode(xmlNode);
+
+            Assert.AreEqual(@"{""root"":""A > B""}", json);
+        }
+#endif
+
+#if !NET20
+        [Test]
+        public void DeserializeXNode_DefaultDate()
+        {
+            var xmlNode = JsonConvert.DeserializeXNode("{Time: \"0001-01-01T00:00:00\"}");
+
+            Assert.AreEqual("<Time>0001-01-01T00:00:00</Time>", xmlNode.ToString());
+        }
+#endif
+
         [Test]
         public void WriteJsonNull()
         {
@@ -164,6 +313,164 @@ namespace Newtonsoft.Json.Tests.Converters
         }
 
 #if !NET20
+        [Test]
+        public void XNode_Null()
+        {
+            string json = JsonConvert.SerializeXNode(null);
+
+            Assert.AreEqual("null", json);
+        }
+
+        [Test]
+        public void XNode_UnescapeTextContent()
+        {
+            XElement xmlNode = XElement.Parse("<root>A &gt; B</root>");
+
+            string json = JsonConvert.SerializeXNode(xmlNode);
+
+            Assert.AreEqual(@"{""root"":""A > B""}", json);
+        }
+
+        [Test]
+        public void XNode_Roundtrip_PropertyNameWithColon()
+        {
+            const string initialJson = @"{""Be:fore:After!"":""Value!""}";
+
+            XDocument xmlNode = JsonConvert.DeserializeXNode(initialJson, null, false, true);
+
+            Assert.AreEqual("<Be_x003A_fore_x003A_After_x0021_>Value!</Be_x003A_fore_x003A_After_x0021_>", xmlNode.ToString());
+
+            string json = JsonConvert.SerializeXNode(xmlNode);
+
+            Assert.AreEqual(initialJson, json);
+        }
+
+        [Test]
+        public void XNode_Roundtrip_PropertyNameWithEscapedValue()
+        {
+            const string initialJson = @"{""BeforeAfter!"":""Value!""}";
+
+            XDocument xmlNode = JsonConvert.DeserializeXNode(initialJson);
+
+            Assert.AreEqual("<BeforeAfter_x0021_>Value!</BeforeAfter_x0021_>", xmlNode.ToString());
+
+            string json = JsonConvert.SerializeXNode(xmlNode);
+
+            Assert.AreEqual(initialJson, json);
+        }
+
+        [Test]
+        public void XNode_EncodeSpecialCharacters()
+        {
+            string initialJson = @"{
+  ""?xml"": {
+    ""@version"": ""1.0"",
+    ""@standalone"": ""no""
+  },
+  ""?xml-stylesheet"": ""href=\""classic.xsl\"" type=\""text/xml\"""",
+  ""span"": {
+    ""@class"": ""vevent"",
+    ""a"": {
+      ""@class"": ""url"",
+      ""@href"": ""http://www.web2con.com/"",
+      ""span"": [
+        {
+          ""@class"": ""summary"",
+          ""#text"": ""Web 2.0 Conference"",
+          ""#cdata-section"": ""my escaped text""
+        },
+        {
+          ""@class"": ""location"",
+          ""#text"": ""Argent Hotel, San Francisco, CA""
+        }
+      ],
+      ""abbr"": [
+        {
+          ""@class"": ""dtstart"",
+          ""@title"": ""2005-10-05"",
+          ""#text"": ""October 5""
+        },
+        {
+          ""@class"": ""dtend"",
+          ""@title"": ""2005-10-08"",
+          ""#text"": ""7""
+        }
+      ]
+    }
+  }
+}";
+
+            XDocument xmlNode = JsonConvert.DeserializeXNode(initialJson, "root", false, true);
+
+            StringAssert.AreEqual(@"<root>
+  <_x003F_xml>
+    <_x0040_version>1.0</_x0040_version>
+    <_x0040_standalone>no</_x0040_standalone>
+  </_x003F_xml>
+  <_x003F_xml-stylesheet>href=""classic.xsl"" type=""text/xml""</_x003F_xml-stylesheet>
+  <span>
+    <_x0040_class>vevent</_x0040_class>
+    <a>
+      <_x0040_class>url</_x0040_class>
+      <_x0040_href>http://www.web2con.com/</_x0040_href>
+      <span>
+        <_x0040_class>summary</_x0040_class>
+        <_x0023_text>Web 2.0 Conference</_x0023_text>
+        <_x0023_cdata-section>my escaped text</_x0023_cdata-section>
+      </span>
+      <span>
+        <_x0040_class>location</_x0040_class>
+        <_x0023_text>Argent Hotel, San Francisco, CA</_x0023_text>
+      </span>
+      <abbr>
+        <_x0040_class>dtstart</_x0040_class>
+        <_x0040_title>2005-10-05</_x0040_title>
+        <_x0023_text>October 5</_x0023_text>
+      </abbr>
+      <abbr>
+        <_x0040_class>dtend</_x0040_class>
+        <_x0040_title>2005-10-08</_x0040_title>
+        <_x0023_text>7</_x0023_text>
+      </abbr>
+    </a>
+  </span>
+</root>", xmlNode.ToString());
+
+            string json = JsonConvert.SerializeXNode(xmlNode, Formatting.Indented, true);
+
+            Assert.AreEqual(initialJson, json);
+        }
+
+        [Test]
+        public void XNode_MetadataArray_EncodeSpecialCharacters()
+        {
+            string initialJson = @"{
+  ""$id"": ""1"",
+  ""$values"": [
+    ""1"",
+    ""2"",
+    ""3"",
+    ""4"",
+    ""5""
+  ]
+}";
+
+            XDocument xmlNode = JsonConvert.DeserializeXNode(initialJson, "root", false, true);
+
+            StringAssert.AreEqual(@"<root>
+  <_x0024_id>1</_x0024_id>
+  <_x0024_values>1</_x0024_values>
+  <_x0024_values>2</_x0024_values>
+  <_x0024_values>3</_x0024_values>
+  <_x0024_values>4</_x0024_values>
+  <_x0024_values>5</_x0024_values>
+</root>", xmlNode.ToString());
+
+            string json = JsonConvert.SerializeXNode(xmlNode, Formatting.Indented, true);
+
+            Assert.AreEqual(initialJson, json);
+        }
+
         [Test]
         public void SerializeDollarProperty()
         {
@@ -262,7 +569,7 @@ namespace Newtonsoft.Json.Tests.Converters
         }
 #endif
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void MultipleNamespacesXmlDocument()
         {
@@ -441,7 +748,7 @@ namespace Newtonsoft.Json.Tests.Converters
 </root>", doc.ToString());
         }
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void SerializeEmptyDocument()
         {
@@ -487,7 +794,7 @@ namespace Newtonsoft.Json.Tests.Converters
             Assert.IsTrue(equals);
         }
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void DeserializeUndeclaredNamespacePrefix()
         {
@@ -502,7 +809,7 @@ namespace Newtonsoft.Json.Tests.Converters
 #endif
 #endif
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void DeserializeMultipleRootElements()
         {
@@ -1297,7 +1604,7 @@ namespace Newtonsoft.Json.Tests.Converters
   ]
 }";
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
             XmlDocument newDoc = JsonConvert.DeserializeXmlNode(json, "myRoot");
 
             string xml = IndentXml(newDoc.InnerXml);
@@ -1335,7 +1642,7 @@ namespace Newtonsoft.Json.Tests.Converters
 </myRoot>", IndentXml(newXDoc.ToString(SaveOptions.DisableFormatting)));
 #endif
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
             string newJson = JsonConvert.SerializeXmlNode(newDoc, Formatting.Indented);
             Console.WriteLine(newJson);
 #endif
@@ -1360,7 +1667,7 @@ namespace Newtonsoft.Json.Tests.Converters
   ]
 }";
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
             XmlDocument newDoc = JsonConvert.DeserializeXmlNode(json, "myRoot", true);
 
             StringAssert.AreEqual(@"<myRoot>
@@ -1396,7 +1703,7 @@ namespace Newtonsoft.Json.Tests.Converters
 </myRoot>", IndentXml(newXDoc.ToString(SaveOptions.DisableFormatting)));
 #endif
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
             string newJson = JsonConvert.SerializeXmlNode(newDoc, Formatting.Indented, true);
             StringAssert.AreEqual(json, newJson);
 #endif
@@ -1422,7 +1729,7 @@ namespace Newtonsoft.Json.Tests.Converters
   ]
 }";
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
             XmlDocument newDoc = JsonConvert.DeserializeXmlNode(json, "myRoot");
 
             Assert.AreEqual(@"<myRoot><available_sizes><available_sizes><available_sizes>113</available_sizes><available_sizes>150</available_sizes></available_sizes><available_sizes>assets/images/resized/0001/1070/11070v1-max-150x150.jpg</available_sizes></available_sizes><available_sizes><available_sizes><available_sizes>189</available_sizes><available_sizes>250</available_sizes></available_sizes><available_sizes>assets/images/resized/0001/1070/11070v1-max-250x250.jpg</available_sizes></available_sizes><available_sizes><available_sizes><available_sizes>341</available_sizes><available_sizes>450</available_sizes></available_sizes><available_sizes>assets/images/resized/0001/1070/11070v1-max-450x450.jpg</available_sizes></available_sizes></myRoot>", newDoc.InnerXml);
@@ -1435,7 +1742,7 @@ namespace Newtonsoft.Json.Tests.Converters
 #endif
         }
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void Encoding()
         {
@@ -1450,7 +1757,7 @@ namespace Newtonsoft.Json.Tests.Converters
         }
 #endif
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void SerializeComment()
         {
@@ -2139,6 +2446,7 @@ namespace Newtonsoft.Json.Tests.Converters
             Assert.AreEqual(@"﻿<?xml version=""1.0"" encoding=""utf-8""?><root booleanType=""true"" />", xmlString);
         }
 
+#if !(NETSTANDARD1_0 || NETSTANDARD1_3)
         [Test]
         public void IgnoreCultureForTypedAttributes()
         {
@@ -2174,6 +2482,7 @@ namespace Newtonsoft.Json.Tests.Converters
                 System.Threading.Thread.CurrentThread.CurrentCulture = originalCulture;
             }
         }
+#endif
 
         [Test]
         public void NullAttributeValue()
@@ -2499,7 +2808,7 @@ namespace Newtonsoft.Json.Tests.Converters
         }
 #endif
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void DeserializeXmlNodeDefaultNamespace()
         {
@@ -2827,7 +3136,7 @@ namespace Newtonsoft.Json.Tests.Converters
         }
 #endif
 
-#if !PORTABLE || NETSTANDARD1_3
+#if !PORTABLE || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void SerializeAndDeserializeXmlElementWithNamespaceInChildrenRootDontHaveNameSpace()
         {
@@ -2846,7 +3155,7 @@ namespace Newtonsoft.Json.Tests.Converters
             Assert.AreEqual(@"<root><b xmlns=""http://www.example.com/ns"">Asd</b><c>AAA</c><test>adad</test></root>", xmlBack.OuterXml);
         }
 
-#if !(NET20 || NET35 || PORTABLE || PORTABLE40) || NETSTANDARD1_3
+#if !(NET20 || NET35 || PORTABLE || PORTABLE40) || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void DeserializeBigInteger()
         {

@@ -312,7 +312,7 @@ namespace Newtonsoft.Json.Tests.Schema
             Assert.IsTrue(v.IsValid(schema));
         }
 
-#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void GenerateSchemaForISerializable()
         {
@@ -340,7 +340,7 @@ namespace Newtonsoft.Json.Tests.Schema
         }
 #endif
 
-#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3 || NETSTANDARD2_0
         public class CustomDirectoryInfoMapper : DefaultContractResolver
         {
             public CustomDirectoryInfoMapper()
@@ -376,17 +376,17 @@ namespace Newtonsoft.Json.Tests.Schema
             generator.UndefinedSchemaIdHandling = UndefinedSchemaIdHandling.UseTypeName;
             generator.ContractResolver = new CamelCasePropertyNamesContractResolver()
             {
-#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3 || NETSTANDARD2_0
                 IgnoreSerializableAttribute = true
 #endif
             };
 
-            JsonSchema schema = generator.Generate(typeof(Version), true);
+            JsonSchema schema = generator.Generate(typeof(VersionOld), true);
 
             string json = schema.ToString();
 
             StringAssert.AreEqual(@"{
-  ""id"": ""System.Version"",
+  ""id"": ""Newtonsoft.Json.Tests.TestObjects.VersionOld"",
   ""type"": [
     ""object"",
     ""null""
@@ -421,7 +421,7 @@ namespace Newtonsoft.Json.Tests.Schema
 }", json);
         }
 
-#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3 || NETSTANDARD2_0
         [Test]
         public void GenerateSchemaSerializable()
         {
@@ -734,7 +734,7 @@ namespace Newtonsoft.Json.Tests.Schema
     {
     }
 
-#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3
+#if !(PORTABLE || DNXCORE50 || PORTABLE40) || NETSTANDARD1_3 || NETSTANDARD2_0
     [Serializable]
     public sealed class SerializableTestObject
     {

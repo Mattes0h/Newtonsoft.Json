@@ -49,7 +49,7 @@ namespace Newtonsoft.Json.Linq
         {
             if (converters != null && converters.Length > 0 && _value != null)
             {
-                JsonConverter matchingConverter = JsonSerializer.GetMatchingConverter(converters, _value.GetType());
+                JsonConverter? matchingConverter = JsonSerializer.GetMatchingConverter(converters, _value.GetType());
                 if (matchingConverter != null && matchingConverter.CanWrite)
                 {
                     // TODO: Call WriteJsonAsync when it exists.
@@ -69,43 +69,43 @@ namespace Newtonsoft.Json.Linq
                 case JTokenType.Undefined:
                     return writer.WriteUndefinedAsync(cancellationToken);
                 case JTokenType.Integer:
-                    if (_value is int)
+                    if (_value is int i)
                     {
-                        return writer.WriteValueAsync((int)_value, cancellationToken);
+                        return writer.WriteValueAsync(i, cancellationToken);
                     }
 
-                    if (_value is long)
+                    if (_value is long l)
                     {
-                        return writer.WriteValueAsync((long)_value, cancellationToken);
+                        return writer.WriteValueAsync(l, cancellationToken);
                     }
 
-                    if (_value is ulong)
+                    if (_value is ulong ul)
                     {
-                        return writer.WriteValueAsync((ulong)_value, cancellationToken);
+                        return writer.WriteValueAsync(ul, cancellationToken);
                     }
 
 #if HAVE_BIG_INTEGER
-                    if (_value is BigInteger)
+                    if (_value is BigInteger integer)
                     {
-                        return writer.WriteValueAsync((BigInteger)_value, cancellationToken);
+                        return writer.WriteValueAsync(integer, cancellationToken);
                     }
 #endif
 
                     return writer.WriteValueAsync(Convert.ToInt64(_value, CultureInfo.InvariantCulture), cancellationToken);
                 case JTokenType.Float:
-                    if (_value is decimal)
+                    if (_value is decimal dec)
                     {
-                        return writer.WriteValueAsync((decimal)_value, cancellationToken);
+                        return writer.WriteValueAsync(dec, cancellationToken);
                     }
 
-                    if (_value is double)
+                    if (_value is double d)
                     {
-                        return writer.WriteValueAsync((double)_value, cancellationToken);
+                        return writer.WriteValueAsync(d, cancellationToken);
                     }
 
-                    if (_value is float)
+                    if (_value is float f)
                     {
-                        return writer.WriteValueAsync((float)_value, cancellationToken);
+                        return writer.WriteValueAsync(f, cancellationToken);
                     }
 
                     return writer.WriteValueAsync(Convert.ToDouble(_value, CultureInfo.InvariantCulture), cancellationToken);
@@ -114,20 +114,20 @@ namespace Newtonsoft.Json.Linq
                 case JTokenType.Boolean:
                     return writer.WriteValueAsync(Convert.ToBoolean(_value, CultureInfo.InvariantCulture), cancellationToken);
                 case JTokenType.Date:
-                    if (_value is DateTimeOffset)
+                    if (_value is DateTimeOffset offset)
                     {
-                        return writer.WriteValueAsync((DateTimeOffset)_value, cancellationToken);
+                        return writer.WriteValueAsync(offset, cancellationToken);
                     }
 
                     return writer.WriteValueAsync(Convert.ToDateTime(_value, CultureInfo.InvariantCulture), cancellationToken);
                 case JTokenType.Bytes:
-                    return writer.WriteValueAsync((byte[])_value, cancellationToken);
+                    return writer.WriteValueAsync((byte[]?)_value, cancellationToken);
                 case JTokenType.Guid:
                     return writer.WriteValueAsync(_value != null ? (Guid?)_value : null, cancellationToken);
                 case JTokenType.TimeSpan:
                     return writer.WriteValueAsync(_value != null ? (TimeSpan?)_value : null, cancellationToken);
                 case JTokenType.Uri:
-                    return writer.WriteValueAsync((Uri)_value, cancellationToken);
+                    return writer.WriteValueAsync((Uri?)_value, cancellationToken);
             }
 
             throw MiscellaneousUtils.CreateArgumentOutOfRangeException(nameof(Type), _valueType, "Unexpected token type.");

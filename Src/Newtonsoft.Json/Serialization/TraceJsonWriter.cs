@@ -1,11 +1,34 @@
+#region License
+// Copyright (c) 2007 James Newton-King
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+#endregion
+
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 #if HAVE_BIG_INTEGER
 using System.Numerics;
 #endif
-using System.Text;
 
 namespace Newtonsoft.Json.Serialization
 {
@@ -121,7 +144,7 @@ namespace Newtonsoft.Json.Serialization
             }
         }
 
-        public override void WriteValue(byte[] value)
+        public override void WriteValue(byte[]? value)
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
@@ -298,7 +321,7 @@ namespace Newtonsoft.Json.Serialization
             }
         }
 
-        public override void WriteValue(object value)
+        public override void WriteValue(object? value)
         {
 #if HAVE_BIG_INTEGER
             if (value is BigInteger)
@@ -318,7 +341,8 @@ namespace Newtonsoft.Json.Serialization
                 }
                 else
                 {
-                    base.WriteValue(value);
+                    // base.WriteValue(value) will error
+                    InternalWriteValue(JsonToken.String);
                 }
             }
         }
@@ -365,7 +389,7 @@ namespace Newtonsoft.Json.Serialization
             }
         }
 
-        public override void WriteValue(string value)
+        public override void WriteValue(string? value)
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
@@ -435,7 +459,7 @@ namespace Newtonsoft.Json.Serialization
             }
         }
 
-        public override void WriteValue(Uri value)
+        public override void WriteValue(Uri? value)
         {
             _textWriter.WriteValue(value);
             _innerWriter.WriteValue(value);
@@ -477,7 +501,7 @@ namespace Newtonsoft.Json.Serialization
             base.WriteWhitespace(ws);
         }
 
-        public override void WriteComment(string text)
+        public override void WriteComment(string? text)
         {
             _textWriter.WriteComment(text);
             _innerWriter.WriteComment(text);
@@ -542,7 +566,7 @@ namespace Newtonsoft.Json.Serialization
             base.WriteEndObject();
         }
 
-        public override void WriteRawValue(string json)
+        public override void WriteRawValue(string? json)
         {
             _textWriter.WriteRawValue(json);
             _innerWriter.WriteRawValue(json);
@@ -551,7 +575,7 @@ namespace Newtonsoft.Json.Serialization
             InternalWriteValue(JsonToken.Undefined);
         }
 
-        public override void WriteRaw(string json)
+        public override void WriteRaw(string? json)
         {
             _textWriter.WriteRaw(json);
             _innerWriter.WriteRaw(json);

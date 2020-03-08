@@ -11,18 +11,22 @@ namespace Newtonsoft.Json.Linq.JsonPath
 {
     internal class FieldMultipleFilter : PathFilter
     {
-        public List<string> Names { get; set; }
+        internal List<string> Names;
+
+        public FieldMultipleFilter(List<string> names)
+        {
+            Names = names;
+        }
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
             foreach (JToken t in current)
             {
-                JObject o = t as JObject;
-                if (o != null)
+                if (t is JObject o)
                 {
                     foreach (string name in Names)
                     {
-                        JToken v = o[name];
+                        JToken? v = o[name];
 
                         if (v != null)
                         {

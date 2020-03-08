@@ -4,7 +4,12 @@ namespace Newtonsoft.Json.Linq.JsonPath
 {
     internal class ScanFilter : PathFilter
     {
-        public string Name { get; set; }
+        internal string? Name;
+
+        public ScanFilter(string? name)
+        {
+            Name = name;
+        }
 
         public override IEnumerable<JToken> ExecuteFilter(JToken root, IEnumerable<JToken> current, bool errorWhenNoMatch)
         {
@@ -15,23 +20,23 @@ namespace Newtonsoft.Json.Linq.JsonPath
                     yield return c;
                 }
 
-                JToken value = c;
-                JContainer container = c as JContainer;
+                JToken? value = c;
 
                 while (true)
                 {
+                    JContainer? container = value as JContainer;
+
                     value = GetNextScanValue(c, container, value);
                     if (value == null)
                     {
                         break;
                     }
 
-                    JProperty e = value as JProperty;
-                    if (e != null)
+                    if (value is JProperty property)
                     {
-                        if (e.Name == Name)
+                        if (property.Name == Name)
                         {
-                            yield return e.Value;
+                            yield return property.Value;
                         }
                     }
                     else
@@ -41,8 +46,6 @@ namespace Newtonsoft.Json.Linq.JsonPath
                             yield return value;
                         }
                     }
-
-                    container = value as JContainer;
                 }
             }
         }

@@ -26,6 +26,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+#nullable disable
+
 namespace Newtonsoft.Json.Bson
 {
     internal abstract class BsonToken
@@ -45,10 +47,7 @@ namespace Newtonsoft.Json.Bson
             token.Parent = this;
         }
 
-        public override BsonType Type
-        {
-            get { return BsonType.Object; }
-        }
+        public override BsonType Type => BsonType.Object;
 
         public IEnumerator<BsonProperty> GetEnumerator()
         {
@@ -71,10 +70,7 @@ namespace Newtonsoft.Json.Bson
             token.Parent = this;
         }
 
-        public override BsonType Type
-        {
-            get { return BsonType.Array; }
-        }
+        public override BsonType Type => BsonType.Array;
 
         public IEnumerator<BsonToken> GetEnumerator()
         {
@@ -111,15 +107,9 @@ namespace Newtonsoft.Json.Bson
             _type = type;
         }
 
-        public object Value
-        {
-            get { return _value; }
-        }
+        public object Value => _value;
 
-        public override BsonType Type
-        {
-            get { return _type; }
-        }
+        public override BsonType Type => _type;
     }
 
     internal class BsonBoolean : BsonValue
@@ -167,10 +157,7 @@ namespace Newtonsoft.Json.Bson
             Options = new BsonString(options, false);
         }
 
-        public override BsonType Type
-        {
-            get { return BsonType.Regex; }
-        }
+        public override BsonType Type => BsonType.Regex;
     }
 
     internal class BsonProperty

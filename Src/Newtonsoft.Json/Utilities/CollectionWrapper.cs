@@ -44,16 +44,15 @@ namespace Newtonsoft.Json.Utilities
 
     internal class CollectionWrapper<T> : ICollection<T>, IWrappedCollection
     {
-        private readonly IList _list;
-        private readonly ICollection<T> _genericCollection;
-        private object _syncRoot;
+        private readonly IList? _list;
+        private readonly ICollection<T>? _genericCollection;
+        private object? _syncRoot;
 
         public CollectionWrapper(IList list)
         {
             ValidationUtils.ArgumentNotNull(list, nameof(list));
 
-            ICollection<T> collection = list as ICollection<T>;
-            if (collection != null)
+            if (list is ICollection<T> collection)
             {
                 _genericCollection = collection;
             }
@@ -78,7 +77,7 @@ namespace Newtonsoft.Json.Utilities
             }
             else
             {
-                _list.Add(item);
+                _list!.Add(item);
             }
         }
 
@@ -90,7 +89,7 @@ namespace Newtonsoft.Json.Utilities
             }
             else
             {
-                _list.Clear();
+                _list!.Clear();
             }
         }
 
@@ -102,7 +101,7 @@ namespace Newtonsoft.Json.Utilities
             }
             else
             {
-                return _list.Contains(item);
+                return _list!.Contains(item);
             }
         }
 
@@ -114,7 +113,7 @@ namespace Newtonsoft.Json.Utilities
             }
             else
             {
-                _list.CopyTo(array, arrayIndex);
+                _list!.CopyTo(array, arrayIndex);
             }
         }
 
@@ -128,7 +127,7 @@ namespace Newtonsoft.Json.Utilities
                 }
                 else
                 {
-                    return _list.Count;
+                    return _list!.Count;
                 }
             }
         }
@@ -143,7 +142,7 @@ namespace Newtonsoft.Json.Utilities
                 }
                 else
                 {
-                    return _list.IsReadOnly;
+                    return _list!.IsReadOnly;
                 }
             }
         }
@@ -156,11 +155,11 @@ namespace Newtonsoft.Json.Utilities
             }
             else
             {
-                bool contains = _list.Contains(item);
+                bool contains = _list!.Contains(item);
 
                 if (contains)
                 {
-                    _list.Remove(item);
+                    _list!.Remove(item);
                 }
 
                 return contains;
@@ -174,7 +173,7 @@ namespace Newtonsoft.Json.Utilities
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable)_genericCollection ?? _list).GetEnumerator();
+            return ((IEnumerable)_genericCollection! ?? _list!).GetEnumerator();
         }
 
         int IList.Add(object value)
@@ -204,7 +203,7 @@ namespace Newtonsoft.Json.Utilities
 
             if (IsCompatibleObject(value))
             {
-                return _list.IndexOf((T)value);
+                return _list!.IndexOf((T)value);
             }
 
             return -1;
@@ -217,7 +216,7 @@ namespace Newtonsoft.Json.Utilities
                 throw new InvalidOperationException("Wrapped ICollection<T> does not support RemoveAt.");
             }
 
-            _list.RemoveAt(index);
+            _list!.RemoveAt(index);
         }
 
         void IList.Insert(int index, object value)
@@ -228,7 +227,7 @@ namespace Newtonsoft.Json.Utilities
             }
 
             VerifyValueType(value);
-            _list.Insert(index, (T)value);
+            _list!.Insert(index, (T)value);
         }
 
         bool IList.IsFixedSize
@@ -242,7 +241,7 @@ namespace Newtonsoft.Json.Utilities
                 }
                 else
                 {
-                    return _list.IsFixedSize;
+                    return _list!.IsFixedSize;
                 }
             }
         }
@@ -264,7 +263,7 @@ namespace Newtonsoft.Json.Utilities
                     throw new InvalidOperationException("Wrapped ICollection<T> does not support indexer.");
                 }
 
-                return _list[index];
+                return _list![index];
             }
             set
             {
@@ -274,7 +273,7 @@ namespace Newtonsoft.Json.Utilities
                 }
 
                 VerifyValueType(value);
-                _list[index] = (T)value;
+                _list![index] = (T)value;
             }
         }
 
@@ -283,10 +282,7 @@ namespace Newtonsoft.Json.Utilities
             CopyTo((T[])array, arrayIndex);
         }
 
-        bool ICollection.IsSynchronized
-        {
-            get { return false; }
-        }
+        bool ICollection.IsSynchronized => false;
 
         object ICollection.SyncRoot
         {
@@ -319,9 +315,6 @@ namespace Newtonsoft.Json.Utilities
             return true;
         }
 
-        public object UnderlyingCollection
-        {
-            get { return (object)_genericCollection ?? _list; }
-        }
+        public object UnderlyingCollection => (object)_genericCollection! ?? _list!;
     }
 }

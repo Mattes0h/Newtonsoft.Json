@@ -46,19 +46,13 @@ namespace Newtonsoft.Json.Linq
         /// Gets the container's children tokens.
         /// </summary>
         /// <value>The container's children tokens.</value>
-        protected override IList<JToken> ChildrenTokens
-        {
-            get { return _values; }
-        }
+        protected override IList<JToken> ChildrenTokens => _values;
 
         /// <summary>
         /// Gets the node type for this <see cref="JToken"/>.
         /// </summary>
         /// <value>The type.</value>
-        public override JTokenType Type
-        {
-            get { return JTokenType.Array; }
-        }
+        public override JTokenType Type => JTokenType.Array;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JArray"/> class.
@@ -96,8 +90,7 @@ namespace Newtonsoft.Json.Linq
 
         internal override bool DeepEquals(JToken node)
         {
-            JArray t = node as JArray;
-            return (t != null && ContentsEqual(t));
+            return (node is JArray t && ContentsEqual(t));
         }
 
         internal override JToken CloneToken()
@@ -122,7 +115,7 @@ namespace Newtonsoft.Json.Linq
         /// <param name="settings">The <see cref="JsonLoadSettings"/> used to load the JSON.
         /// If this is <c>null</c>, default load settings will be used.</param>
         /// <returns>A <see cref="JArray"/> that contains the JSON that was read from the specified <see cref="JsonReader"/>.</returns>
-        public new static JArray Load(JsonReader reader, JsonLoadSettings settings)
+        public new static JArray Load(JsonReader reader, JsonLoadSettings? settings)
         {
             if (reader.TokenType == JsonToken.None)
             {
@@ -170,7 +163,7 @@ namespace Newtonsoft.Json.Linq
         /// <example>
         ///   <code lang="cs" source="..\Src\Newtonsoft.Json.Tests\Documentation\LinqToJsonTests.cs" region="LinqToJsonCreateParseArray" title="Parsing a JSON Array from Text" />
         /// </example>
-        public new static JArray Parse(string json, JsonLoadSettings settings)
+        public new static JArray Parse(string json, JsonLoadSettings? settings)
         {
             using (JsonReader reader = new JsonTextReader(new StringReader(json)))
             {
@@ -234,7 +227,7 @@ namespace Newtonsoft.Json.Linq
         /// Gets the <see cref="JToken"/> with the specified key.
         /// </summary>
         /// <value>The <see cref="JToken"/> with the specified key.</value>
-        public override JToken this[object key]
+        public override JToken? this[object key]
         {
             get
             {
@@ -266,18 +259,23 @@ namespace Newtonsoft.Json.Linq
         /// <value></value>
         public JToken this[int index]
         {
-            get { return GetItem(index); }
-            set { SetItem(index, value); }
+            get => GetItem(index);
+            set => SetItem(index, value);
         }
 
-        internal override int IndexOfItem(JToken item)
+        internal override int IndexOfItem(JToken? item)
         {
+            if (item == null)
+            {
+                return -1;
+            }
+
             return _values.IndexOfReference(item);
         }
 
-        internal override void MergeItem(object content, JsonMergeSettings settings)
+        internal override void MergeItem(object content, JsonMergeSettings? settings)
         {
-            IEnumerable a = (IsMultiContent(content) || content is JArray)
+            IEnumerable? a = (IsMultiContent(content) || content is JArray)
                 ? (IEnumerable)content
                 : null;
             if (a == null)
@@ -382,10 +380,7 @@ namespace Newtonsoft.Json.Linq
         /// Gets a value indicating whether the <see cref="JArray"/> is read-only.
         /// </summary>
         /// <returns><c>true</c> if the <see cref="JArray"/> is read-only; otherwise, <c>false</c>.</returns>
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
         /// <summary>
         /// Removes the first occurrence of a specific object from the <see cref="JArray"/>.

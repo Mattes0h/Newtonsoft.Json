@@ -38,25 +38,25 @@ namespace Newtonsoft.Json
         /// Gets or sets the id.
         /// </summary>
         /// <value>The id.</value>
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         /// <summary>
         /// Gets or sets the title.
         /// </summary>
         /// <value>The title.</value>
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         /// <summary>
         /// Gets or sets the description.
         /// </summary>
         /// <value>The description.</value>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// Gets or sets the collection's items converter.
         /// </summary>
         /// <value>The collection's items converter.</value>
-        public Type ItemConverterType { get; set; }
+        public Type? ItemConverterType { get; set; }
 
         /// <summary>
         /// The parameter list to use when constructing the <see cref="JsonConverter"/> described by <see cref="ItemConverterType"/>.
@@ -69,15 +69,15 @@ namespace Newtonsoft.Json
         /// [JsonContainer(ItemConverterType = typeof(MyContainerConverter), ItemConverterParameters = new object[] { 123, "Four" })]
         /// </code>
         /// </example>
-        public object[] ItemConverterParameters { get; set; }
+        public object[]? ItemConverterParameters { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Type"/> of the <see cref="NamingStrategy"/>.
         /// </summary>
         /// <value>The <see cref="Type"/> of the <see cref="NamingStrategy"/>.</value>
-        public Type NamingStrategyType
+        public Type? NamingStrategyType
         {
-            get { return _namingStrategyType; }
+            get => _namingStrategyType;
             set
             {
                 _namingStrategyType = value;
@@ -96,9 +96,9 @@ namespace Newtonsoft.Json
         /// [JsonContainer(NamingStrategyType = typeof(MyNamingStrategy), NamingStrategyParameters = new object[] { 123, "Four" })]
         /// </code>
         /// </example>
-        public object[] NamingStrategyParameters
+        public object[]? NamingStrategyParameters
         {
-            get { return _namingStrategyParameters; }
+            get => _namingStrategyParameters;
             set
             {
                 _namingStrategyParameters = value;
@@ -106,7 +106,7 @@ namespace Newtonsoft.Json
             }
         }
 
-        internal NamingStrategy NamingStrategyInstance { get; set; }
+        internal NamingStrategy? NamingStrategyInstance { get; set; }
 
         // yuck. can't set nullable properties on an attribute in C#
         // have to use this approach to get an unset default state
@@ -114,8 +114,8 @@ namespace Newtonsoft.Json
         internal bool? _itemIsReference;
         internal ReferenceLoopHandling? _itemReferenceLoopHandling;
         internal TypeNameHandling? _itemTypeNameHandling;
-        private Type _namingStrategyType;
-        private object[] _namingStrategyParameters;
+        private Type? _namingStrategyType;
+        private object[]? _namingStrategyParameters;
 
         /// <summary>
         /// Gets or sets a value that indicates whether to preserve object references.
@@ -125,8 +125,8 @@ namespace Newtonsoft.Json
         /// </value>
         public bool IsReference
         {
-            get { return _isReference ?? default(bool); }
-            set { _isReference = value; }
+            get => _isReference ?? default;
+            set => _isReference = value;
         }
 
         /// <summary>
@@ -137,8 +137,8 @@ namespace Newtonsoft.Json
         /// </value>
         public bool ItemIsReference
         {
-            get { return _itemIsReference ?? default(bool); }
-            set { _itemIsReference = value; }
+            get => _itemIsReference ?? default;
+            set => _itemIsReference = value;
         }
 
         /// <summary>
@@ -147,8 +147,8 @@ namespace Newtonsoft.Json
         /// <value>The reference loop handling.</value>
         public ReferenceLoopHandling ItemReferenceLoopHandling
         {
-            get { return _itemReferenceLoopHandling ?? default(ReferenceLoopHandling); }
-            set { _itemReferenceLoopHandling = value; }
+            get => _itemReferenceLoopHandling ?? default;
+            set => _itemReferenceLoopHandling = value;
         }
 
         /// <summary>
@@ -157,8 +157,8 @@ namespace Newtonsoft.Json
         /// <value>The type name handling.</value>
         public TypeNameHandling ItemTypeNameHandling
         {
-            get { return _itemTypeNameHandling ?? default(TypeNameHandling); }
-            set { _itemTypeNameHandling = value; }
+            get => _itemTypeNameHandling ?? default;
+            set => _itemTypeNameHandling = value;
         }
 
         /// <summary>
